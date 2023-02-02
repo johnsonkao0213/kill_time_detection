@@ -49,8 +49,6 @@ weight_decay = 0.0001
 lr_patience = 30
 log_interval = 30   # interval for displaying training info
 
-# Select frames to begin & end in videos
-# select_frame = {'begin': 1, 'end': 7, 'skip': 1}
 
 def check_mkdir(dir_name):
     if not os.path.exists(dir_name):
