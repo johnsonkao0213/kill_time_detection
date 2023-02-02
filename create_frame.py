@@ -8,13 +8,10 @@ import pandas as pd
 
 user = '45'
 data_path = '../P'+user
-#csv_path = '../grouping/all_csv_data.csv'
 length_path = 'frame_count_P'+user+'.pkl'
 target_path = 'targets_P'+user+'.pkl'
 paths = '../CHI_data/raw_frame_P'+user
-# paths = '../CHI_data_by_day/'
 
-# user = ['P10','P11','P14','P16','P17','P18','P19','P22','P23','P24','P25','P26','P27','P28','P29','P30','P31','P32','
 
 
 IMG_EXTENSIONS = [
@@ -31,22 +28,11 @@ def images_to_logData(path, df):
     lengths = []
     targets = []
     cnt=0
-    ### day
-#     days=[]
-#     le = preprocessing.LabelEncoder()
-    
-#     for i in tqdm(df.index):
-#         days.append(i[10:12])
-#     le.fit(days) 
-    ###
+
     for i in tqdm(df.index):
         lengths.append(df['ITV_30'][i])
         targets.append(df['kill_time'][i])
         cnt+=1
-        ###day
-#         day = le.transform([i[10:12]])    
-#         des = paths+(str(day[0]))+'/raw_frame_P'+user+'/'+(str(cnt).rjust(6,'0'))
-        ###
         des = paths+'/'+(str(cnt).rjust(6,'0'))
         os.makedirs(des)        
         for j in df['combine_30s'][i].split(';'):
@@ -54,22 +40,6 @@ def images_to_logData(path, df):
             if j.split('/')[2] in df.index:
                 shutil.copy(item, des)
                 
-    #for index, row in tqdm(df.iterrows()):
-    #    for root, _ , files in os.walk(path):
-    #        for fname in files:
-    #            if fname.endswith(index+".jpg"):
-    #                item = os.path.join(root, fname)  # 圖片的路徑
-                    # (圖片的路徑,圖片類別)
-    #                imgs.append(item)
-    #                targets.append(row['kill_time'])
-
-
-    #for i in zip(imgs, imgs[1:], imgs[2:], imgs[3:], imgs[4:], imgs[5:]):
-    #    cnt+=1
-    #    des = paths+'/'+str(cnt)
-    #    os.mkdir(des)
-    #    for j in i:
-    #        shutil.copy(j, des)
             
     with open(target_path, 'wb') as handle:
         pickle.dump(targets, handle, protocol=pickle.HIGHEST_PROTOCOL)  
