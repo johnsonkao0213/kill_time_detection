@@ -2,8 +2,7 @@
 
 * ACM CHI 2023 paper "Are You Killing Time? Predicting Smartphone Users’ Time-killing Moments via Fusion of Smartphone Sensor Data and Screenshots"
 
-This is the repository demonstrates the kill time detection in the paper. We provided the model structure and training weight, which you can download from the Rleases. However, according to the IRB policy, we are not able to provide the training dataset that we trained on our model. Therefore, you would like to collected your own screenshots to train the model. For the inference, we gave few screenshots as example that we created. 
-
+This repository provides the code for the kill time detection described in the paper. The model structure and pre-trained weights can be downloaded from the releases section. However, due to IRB policy, we cannot provide the training dataset. You will need to collect your own screenshots for training the model. We have provided a few example screenshots for inference.
 
 # Requirements
 
