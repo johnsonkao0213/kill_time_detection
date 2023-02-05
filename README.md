@@ -17,15 +17,16 @@ This is the repository demonstrates the kill time detection in the paper. We pro
 -  [Acknowledgments](#acknowledgments)
 
 # How to use   
-- First, store your own screenshots in the `datasets/screenshots` folders and the corresponding sensor data in the csv file in `datasets/sensor`. More folders detail please see [In Details](#in-details).
 
-- Second, run `create_frame.py` to generate folders storing the 30 seconds window of screenshots as one training data point.
+- First, store your own screenshots in the datasets/screenshots folder and the corresponding sensor data in a csv file in datasets/sensor. See [In Details](#in-details) for more information on the folders.
 
-- Third, run `create_dataset.py` to generate train, val, and test dataset.
+- Second, run `create_frame.py` to generate folders storing the 30-second window of screenshots as one training data point.
 
-- Fourth, run `H5.py` to generate H5 file, which speed up the training precess in the large scale of screenshots data.  
+- Third, run `create_dataset.py` to generate train, val, and test datasets.
 
-- Fifth, to train the sensor model, run `mlp_varlen.py`. To train the screenshot model, run `cnn_varlen.py`. In both file, you would like to modify the file path for the H5 file and csv file 
+- Fourth, run `H5.py` to generate the H5 file, which speeds up the training process with large amounts of screenshot data.
+
+- Fifth, to train the sensor model, run `mlp_varlen.py`. To train the screenshot model, run `cnn_varlen.py`. In both file, you you will need to modify the file path for the H5 file and csv file.
 
 
 ```python
@@ -44,7 +45,7 @@ h5_train_path = 'train.h5' # your file path
 h5_val_path = 'val.h5' # your file path 
 
 ```
-- Sixth, to train the fusion model, run `fusion_varlen.py`. In the `fusion_varlen.py`, you have to assign paths of dataset and weights that you train from the `mlp_varlen.py` and `cnn_varlen.py`.
+- Sixth, to train the fusion model, run `fusion_varlen.py`. In the `fusion_varlen.py`, you will need to assign paths of the dataset and weights that you trained in `mlp_varlen.py` and `cnn_varlen.py`.
 
 
 ```python
@@ -58,7 +59,7 @@ mlp_encoder_path = '.pth' # your weight from mlp_varlen.py.
 
 ```
 
-- Last, to inference, run the `predictionCNN.py`, `predictionFusion.py`, and `predictionMLP.py`. Remember change the weight and the test set path.
+- Lastly, for inference, run `predictionCNN.py`, `predictionFusion.py`, and `predictionMLP.py`. Remember to change the weights and the test set path.
 
 
 
