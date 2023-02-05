@@ -125,15 +125,6 @@ def validation(model, device, optimizer, test_loader):
     test_score = accuracy_score(all_y.cpu().data.squeeze().numpy(), all_y_pred.cpu().data.squeeze().numpy())
     test_roc_auc_score = roc_auc_score(all_y.cpu().data.squeeze().numpy(), all_y_pred.cpu().data.squeeze().numpy())
 
-    # show information
-#     print('\nTest set ({:d} samples): Average loss: {:.4f}, Accuracy: {:.2f}%\n'.format(len(all_y), test_loss, 100* test_score))
-
-#     # save Pytorch models of best record
-#     check_mkdir(save_model_path)
-#     torch.save(cnn_encoder.state_dict(), os.path.join(save_model_path, 'cnn_encoder_epoch{}.pth'.format(epoch + 1)))  # save spatial_encoder
-#     torch.save(rnn_decoder.state_dict(), os.path.join(save_model_path, 'rnn_decoder_epoch{}.pth'.format(epoch + 1)))  # save motion_encoder
-#     torch.save(optimizer.state_dict(), os.path.join(save_model_path, 'optimizer_epoch{}.pth'.format(epoch + 1)))      # save optimizer
-#     print("Epoch {} model saved!".format(epoch + 1))
 
     return test_loss, test_score, test_roc_auc_score
 
@@ -141,10 +132,7 @@ def validation(model, device, optimizer, test_loader):
 data_path = "../../CHI_data/raw_frame_P"   # define UCF-101 spatial data path
 
 save_model_path = "./ResNetCRNN_ckpt_attention_map/"
-# fold = '3'
-# dataset = 'Group1'
-# cnnEpoch= '15'
-# mlpEpoch= '5'
+
 
 MLP_epoch = {
     'Group1_2' : {
@@ -227,193 +215,188 @@ df = df.drop(columns=['Unnamed: 0', 'PID' ,'screen_status', 'record_time', 'is_s
 use_cuda = torch.cuda.is_available()                   # check if GPU exists
 device = torch.device("cuda" if use_cuda else "cpu")   # use CPU or GPU
 
-for dataset in ['all']:
-    for fold in ['1']:
-        # h5_train_path = '../../../../../work/u7002555/CHI_images_users_by_day_trainSet_fold'+fold+'.h5'
-        # h5_val_path = '../../../../work/u7002555/CHI_images_users_by_day_valSet_fold'+fold+'.h5'
-        # h5_train_path = '../../../../work/u7002555/CHI_images_users_by_day_55_trainSet_fold'+fold+'.h5'
-        # h5_val_path = '../../../../work/u7002555/CHI_images_users_by_day_55_valSet_fold'+fold+'.h5'
-        # h5_train_path = '../../../../work/u7002555/CHI_images_users_by_day_cluster2_2_trainSet_fold'+fold+'.h5'
-        # h5_val_path = '../../../../work/u7002555/CHI_images_users_by_day_cluster2_2_testSet_fold'+fold+'.h5'
-        # h5_train_path = './CHI_gen_users5_'+fold+'_3_trainSet.h5'
-        # h5_val_path = './CHI_gen_users5_'+fold+'_3_testSet.h5'
-        h5_train_path = "../../../../work/u7002555/CHI_images_users_by_day_55_"+dataset+"_weekend_random_trainSet_fold"+fold+".h5"
-        h5_val_path = "../../../../work/u7002555/CHI_images_users_by_day_55_"+dataset+"_weekend_random_valSet_fold"+fold+".h5"
-
-        CNN_fc_hidden1, CNN_fc_hidden2 = 1024, 768
-        CNN_embed_dim = 2048   # latent dim extracted by 2D CNN
-        res_size = 224        # ResNet image size
-        dropout_p = 0.5       # dropout probability
-
-        # DecoderRNN architecture
-        RNN_hidden_layers = 3
-        RNN_hidden_nodes = 512
-        RNN_hidden_nodes_mlp = 512
-        RNN_FC_dim = 256
-        mlp_dim = 128
-
-        # Data loading parameters
-        params = {'batch_size': batch_size, 'shuffle': True, 'num_workers': 0, 'pin_memory': True,  'drop_last': True} if use_cuda else {}
-
-        transformT = transforms.Compose([transforms.ToTensor(),
-                                        transforms.RandomRotation(30),
-                                        transforms.RandomCrop([100,100])])
-        transform = transforms.Compose([transforms.Resize([res_size, res_size]),
-                                        transforms.ToTensor(),
-                                        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-        # EncoderCNN architecture
-        
-        
-        # Create model
-        cnn_encoder = ResCNNEncoder(fc_hidden1=CNN_fc_hidden1, fc_hidden2=CNN_fc_hidden2, drop_p=dropout_p, CNN_embed_dim=CNN_embed_dim).to(device)
-        rnn_decoder = DecoderRNN_varlen(CNN_embed_dim=CNN_embed_dim, h_RNN_layers=RNN_hidden_layers, h_RNN=RNN_hidden_nodes,
-                                 h_FC_dim=RNN_FC_dim, drop_p=dropout_p, num_classes=k,feature=True).to(device)
-
-        MLP = MLPEncoder(mlp_dim, RNN_hidden_layers, RNN_hidden_nodes_mlp,
-                                 RNN_FC_dim, dropout_p, k, df, device,feature=True).to(device)
 
 
-        model = combineEncoder(cnn_encoder, rnn_decoder, MLP, dropout_p, num_classes=k).to(device)
-        del MLP, rnn_decoder,cnn_encoder
-        state_dict2 = torch.load(os.path.join(save_model_path, 'rnn_decoder_CRNN'+fold+'_day_55_'+dataset+'_weekend_random_epoch'+CNN_epoch[dataset][fold]+'.pth'))
-        new_state_dict2 = OrderedDict()
-        for k, v in state_dict2.items():
-            name = k[7:] # remove `module.`
-            new_state_dict2[name] = v
-            # load params
-        model.rnn_decoder.load_state_dict(new_state_dict2)
-        print('load rnn_decoder...')
+h5_train_path = "../../../../work/u7002555/CHI_images_users_by_day_55_"+dataset+"_weekend_random_trainSet_fold"+fold+".h5"
+h5_val_path = "../../../../work/u7002555/CHI_images_users_by_day_55_"+dataset+"_weekend_random_valSet_fold"+fold+".h5"
+cnn_encoder_path = 'cnn_encoder_CRNN'+fold+'_day_55_'+dataset+'_weekend_random_epoch'+CNN_epoch[dataset][fold]+'.pth'
+cnn_decoder_path = 'rnn_decoder_CRNN'+fold+'_day_55_'+dataset+'_weekend_random_epoch'+CNN_epoch[dataset][fold]+'.pth'
+mlp_encoder_path = 'rnn_decoder_mlp'+fold+'_day_55_'+dataset+'_weekend_random_epoch'+MLP_epoch[dataset][fold]+'.pth'
 
-        state_dict1 = torch.load(os.path.join(save_model_path, 'cnn_encoder_CRNN'+fold+'_day_55_'+dataset+'_weekend_random_epoch'+CNN_epoch[dataset][fold]+'.pth'))
-        new_state_dict1 = OrderedDict()
-        for k, v in state_dict1.items():
-            name = k[7:] # remove `module.`
-            new_state_dict1[name] = v
-        # load params
-        model.cnn_encoder.load_state_dict(new_state_dict1)
-        print('load cnn_encoder...')
+CNN_fc_hidden1, CNN_fc_hidden2 = 1024, 768
+CNN_embed_dim = 2048   # latent dim extracted by 2D CNN
+res_size = 224        # ResNet image size
+dropout_p = 0.5       # dropout probability
 
-        state_dict3 = torch.load(os.path.join(save_model_path, 'rnn_decoder_mlp'+fold+'_day_55_'+dataset+'_weekend_random_epoch'+MLP_epoch[dataset][fold]+'.pth'))
-        new_state_dict3 = OrderedDict()
-        for k, v in state_dict3.items():
-            name = k[7:] # remove `module.`
-            new_state_dict3[name] = v
-        # load params
-        model.mlp.load_state_dict(new_state_dict3)
-        print('load MLP...')
+# DecoderRNN architecture
+RNN_hidden_layers = 3
+RNN_hidden_nodes = 512
+RNN_hidden_nodes_mlp = 512
+RNN_FC_dim = 256
+mlp_dim = 128
+
+# Data loading parameters
+params = {'batch_size': batch_size, 'shuffle': True, 'num_workers': 0, 'pin_memory': True,  'drop_last': True} if use_cuda else {}
+
+transformT = transforms.Compose([transforms.ToTensor(),
+                                transforms.RandomRotation(30),
+                                transforms.RandomCrop([100,100])])
+transform = transforms.Compose([transforms.Resize([res_size, res_size]),
+                                transforms.ToTensor(),
+                                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+# EncoderCNN architecture
+
+
+# Create model
+cnn_encoder = ResCNNEncoder(fc_hidden1=CNN_fc_hidden1, fc_hidden2=CNN_fc_hidden2, drop_p=dropout_p, CNN_embed_dim=CNN_embed_dim).to(device)
+rnn_decoder = DecoderRNN_varlen(CNN_embed_dim=CNN_embed_dim, h_RNN_layers=RNN_hidden_layers, h_RNN=RNN_hidden_nodes,
+                         h_FC_dim=RNN_FC_dim, drop_p=dropout_p, num_classes=k,feature=True).to(device)
+
+MLP = MLPEncoder(mlp_dim, RNN_hidden_layers, RNN_hidden_nodes_mlp,
+                         RNN_FC_dim, dropout_p, k, df, device,feature=True).to(device)
+
+
+model = combineEncoder(cnn_encoder, rnn_decoder, MLP, dropout_p, num_classes=k).to(device)
+del MLP, rnn_decoder,cnn_encoder
+state_dict2 = torch.load(os.path.join(save_model_path, cnn_decoder_path))
+new_state_dict2 = OrderedDict()
+for k, v in state_dict2.items():
+    name = k[7:] # remove `module.`
+    new_state_dict2[name] = v
+    # load params
+model.rnn_decoder.load_state_dict(new_state_dict2)
+print('load rnn_decoder...')
+
+state_dict1 = torch.load(os.path.join(save_model_path, cnn_encoder_path))
+new_state_dict1 = OrderedDict()
+for k, v in state_dict1.items():
+    name = k[7:] # remove `module.`
+    new_state_dict1[name] = v
+# load params
+model.cnn_encoder.load_state_dict(new_state_dict1)
+print('load cnn_encoder...')
+
+state_dict3 = torch.load(os.path.join(save_model_path, mlp_encoder_path))
+new_state_dict3 = OrderedDict()
+for k, v in state_dict3.items():
+    name = k[7:] # remove `module.`
+    new_state_dict3[name] = v
+# load params
+model.mlp.load_state_dict(new_state_dict3)
+print('load MLP...')
 
 
 
 
-        for param in model.rnn_decoder.parameters():
-            param.required_grad = False
-        for param in model.cnn_encoder.parameters():
-            param.required_grad = False
-        for param in model.mlp.parameters():
-            param.required_grad = False
+for param in model.rnn_decoder.parameters():
+    param.required_grad = False
+for param in model.cnn_encoder.parameters():
+    param.required_grad = False
+for param in model.mlp.parameters():
+    param.required_grad = False
 
 
-        # Combine all EncoderCNN + DecoderRNN parameters
-        print("Using", torch.cuda.device_count(), "GPU!")
-        if torch.cuda.device_count() > 1:
-            # Parallelize model to multiple GPUs
-        #     cnn_encoder = nn.DataParallel(cnn_encoder)
-            model = nn.DataParallel(model)
-            crnn_params = list(model.parameters())
-        #                   list(cnn_encoder.module.fc1.parameters()) + list(cnn_encoder.module.bn1.parameters()) + \
-        #                   list(cnn_encoder.module.fc2.parameters()) + list(cnn_encoder.module.bn2.parameters()) + \
-        #                   list(cnn_encoder.module.fc3.parameters()) + list(rnn_decoder.parameters())
+# Combine all EncoderCNN + DecoderRNN parameters
+print("Using", torch.cuda.device_count(), "GPU!")
+if torch.cuda.device_count() > 1:
+    # Parallelize model to multiple GPUs
+#     cnn_encoder = nn.DataParallel(cnn_encoder)
+    model = nn.DataParallel(model)
+    crnn_params = list(model.parameters())
+#                   list(cnn_encoder.module.fc1.parameters()) + list(cnn_encoder.module.bn1.parameters()) + \
+#                   list(cnn_encoder.module.fc2.parameters()) + list(cnn_encoder.module.bn2.parameters()) + \
+#                   list(cnn_encoder.module.fc3.parameters()) + list(rnn_decoder.parameters())
 
-        elif torch.cuda.device_count() == 1:
-            crnn_params = list(cnn_encoder.fc1.parameters()) + list(cnn_encoder.bn1.parameters()) + \
-                          list(cnn_encoder.fc2.parameters()) + list(cnn_encoder.bn2.parameters()) + \
-                          list(cnn_encoder.fc3.parameters()) + list(model.parameters())
+elif torch.cuda.device_count() == 1:
+    crnn_params = list(cnn_encoder.fc1.parameters()) + list(cnn_encoder.bn1.parameters()) + \
+                  list(cnn_encoder.fc2.parameters()) + list(cnn_encoder.bn2.parameters()) + \
+                  list(cnn_encoder.fc3.parameters()) + list(model.parameters())
 
-        optimizer = torch.optim.Adam(crnn_params, lr=learning_rate,weight_decay=weight_decay)
-        scheduler = ReduceLROnPlateau(optimizer, 'min', patience=lr_patience, min_lr=1e-10, verbose=True)
+optimizer = torch.optim.Adam(crnn_params, lr=learning_rate,weight_decay=weight_decay)
+scheduler = ReduceLROnPlateau(optimizer, 'min', patience=lr_patience, min_lr=1e-10, verbose=True)
 
-        # record training process
-        epoch_train_losses = []
-        epoch_train_scores = []
-        epoch_test_losses = []
-        epoch_test_scores = []
-        epoch_train_roc_auc_scores = []
-        epoch_test_roc_auc_scores = []
+# record training process
+epoch_train_losses = []
+epoch_train_scores = []
+epoch_test_losses = []
+epoch_test_scores = []
+epoch_train_roc_auc_scores = []
+epoch_test_roc_auc_scores = []
 
-        # start training
-        for epoch in range(epochs):
-            print(time.asctime(time.localtime(time.time())))
-            print(h5_train_path)
-            # train, test model
-            train_set = Dataset_h5(h5_train_path, epoch, transform=transformT)
+# start training
+for epoch in range(epochs):
+    print(time.asctime(time.localtime(time.time())))
+    print(h5_train_path)
+    # train, test model
+    train_set = Dataset_h5(h5_train_path, epoch, transform=transformT)
 
-            train_loader = data.DataLoader(train_set, **params)
-            epoch_train_loss, epoch_train_score, epoch_train_roc_auc_score = train(log_interval, model, device, train_loader, optimizer, epoch)
-            del train_loader, train_set
+    train_loader = data.DataLoader(train_set, **params)
+    epoch_train_loss, epoch_train_score, epoch_train_roc_auc_score = train(log_interval, model, device, train_loader, optimizer, epoch)
+    del train_loader, train_set
 
-            epoch_test_loss, epoch_test_score,epoch_test_roc_auc_score = 0,0,0
-            for i in range(5):
-                valid_set = Dataset_h5(h5_val_path, epochs, transform=transformT,train = False)
-                valid_loader = data.DataLoader(valid_set, **params)
-                test_loss, test_score,test_roc_auc_score = validation(model, device, optimizer, valid_loader)
+    epoch_test_loss, epoch_test_score,epoch_test_roc_auc_score = 0,0,0
+    for i in range(5):
+        valid_set = Dataset_h5(h5_val_path, epochs, transform=transformT,train = False)
+        valid_loader = data.DataLoader(valid_set, **params)
+        test_loss, test_score,test_roc_auc_score = validation(model, device, optimizer, valid_loader)
 
-                epoch_test_loss += test_loss
-                epoch_test_score += test_score
-                epoch_test_roc_auc_score+=test_roc_auc_score
+        epoch_test_loss += test_loss
+        epoch_test_score += test_score
+        epoch_test_roc_auc_score+=test_roc_auc_score
 
-                del valid_loader, valid_set
-        #     epoch_test_loss, epoch_test_score = epoch_test_loss, epoch_test_score
-            epoch_test_loss, epoch_test_score, epoch_test_roc_auc_score = epoch_test_loss/5, epoch_test_score/5, epoch_test_roc_auc_score/5
-            print('\nVaild set: Average loss: {:.4f}, Accuracy: {:.2f}%\n'.format(epoch_test_loss, 100* epoch_test_score))
+        del valid_loader, valid_set
+#     epoch_test_loss, epoch_test_score = epoch_test_loss, epoch_test_score
+    epoch_test_loss, epoch_test_score, epoch_test_roc_auc_score = epoch_test_loss/5, epoch_test_score/5, epoch_test_roc_auc_score/5
+    print('\nVaild set: Average loss: {:.4f}, Accuracy: {:.2f}%\n'.format(epoch_test_loss, 100* epoch_test_score))
 
-            torch.save(model.state_dict(), os.path.join(save_model_path, 'rnn_decoder_fusion'+fold+'_day_55_'+dataset+'_weekend_random_epoch{}.pth'.format(epoch + 1)))  # save motion_encoder
-            torch.save(optimizer.state_dict(), os.path.join(save_model_path, 'optimizer_fusion'+fold+'_day_55_'+dataset+'_weekend_random_epoch{}.pth'.format(epoch + 1)))      # save optimizer
-            print("Epoch {} model saved!".format(epoch + 1))
+    torch.save(model.state_dict(), os.path.join(save_model_path, 'rnn_decoder_fusion'+fold+'_day_55_'+dataset+'_weekend_random_epoch{}.pth'.format(epoch + 1)))  # save motion_encoder
+    torch.save(optimizer.state_dict(), os.path.join(save_model_path, 'optimizer_fusion'+fold+'_day_55_'+dataset+'_weekend_random_epoch{}.pth'.format(epoch + 1)))      # save optimizer
+    print("Epoch {} model saved!".format(epoch + 1))
 
-            scheduler.step(epoch_test_loss)
+    scheduler.step(epoch_test_loss)
 
-            # save results
-            epoch_train_losses.append(epoch_train_loss)
-            epoch_train_scores.append(epoch_train_score)
-            epoch_train_roc_auc_scores.append(epoch_train_roc_auc_score)
-            epoch_test_losses.append(epoch_test_loss)
-            epoch_test_scores.append(epoch_test_score)
-            epoch_test_roc_auc_scores.append(epoch_test_roc_auc_score)
+    # save results
+    epoch_train_losses.append(epoch_train_loss)
+    epoch_train_scores.append(epoch_train_score)
+    epoch_train_roc_auc_scores.append(epoch_train_roc_auc_score)
+    epoch_test_losses.append(epoch_test_loss)
+    epoch_test_scores.append(epoch_test_score)
+    epoch_test_roc_auc_scores.append(epoch_test_roc_auc_score)
 
 
-            # save all train test results
-            A = np.array(epoch_train_losses)
-            B = np.array(epoch_train_scores)
-            C = np.array(epoch_test_losses)
-            D = np.array(epoch_test_scores)
-            E = np.array(epoch_train_roc_auc_scores)
-            G = np.array(epoch_test_roc_auc_scores)
-            np.save('./fusion'+fold+'_day_55_'+dataset+'_weekend_random_training_loss.npy', A)
-            np.save('./fusion'+fold+'_day_55_'+dataset+'_weekend_random_training_score.npy', B)
-            np.save('./fusion'+fold+'_day_55_'+dataset+'_weekend_random_test_loss.npy', C)
-            np.save('./fusion'+fold+'_day_55_'+dataset+'_weekend_random_test_score.npy', D)
-            np.save('./fusion'+fold+'_day_55_'+dataset+'_weekend_random_training_roc_auc.npy', E)
-            np.save('./fusion'+fold+'_day_55_'+dataset+'_weekend_random_test_roc_auc.npy', G)
+    # save all train test results
+    A = np.array(epoch_train_losses)
+    B = np.array(epoch_train_scores)
+    C = np.array(epoch_test_losses)
+    D = np.array(epoch_test_scores)
+    E = np.array(epoch_train_roc_auc_scores)
+    G = np.array(epoch_test_roc_auc_scores)
+    np.save('./fusion'+fold+'_day_55_'+dataset+'_weekend_random_training_loss.npy', A)
+    np.save('./fusion'+fold+'_day_55_'+dataset+'_weekend_random_training_score.npy', B)
+    np.save('./fusion'+fold+'_day_55_'+dataset+'_weekend_random_test_loss.npy', C)
+    np.save('./fusion'+fold+'_day_55_'+dataset+'_weekend_random_test_score.npy', D)
+    np.save('./fusion'+fold+'_day_55_'+dataset+'_weekend_random_training_roc_auc.npy', E)
+    np.save('./fusion'+fold+'_day_55_'+dataset+'_weekend_random_test_roc_auc.npy', G)
 
-        # plot
-        fig = plt.figure(figsize=(10, 4))
-        plt.subplot(121)
-        plt.plot(np.arange(1, epochs + 1), A[:, -1])  # train loss (on epoch end)
-        plt.plot(np.arange(1, epochs + 1), C)  # test loss (on epoch end)
-        plt.title("model loss")
-        plt.xlabel('epochs')
-        plt.ylabel('loss')
-        plt.legend(['train', 'test'], loc="upper left")
-        # 2nd figure (accuracy)
-        plt.subplot(122)
-        plt.plot(np.arange(1, epochs + 1), B[:, -1])  # train accuracy (on epoch end)
-        plt.plot(np.arange(1, epochs + 1), D)  # test accuracy (on epoch end)
-        plt.title("training scores")
-        plt.xlabel('epochs')
-        plt.ylabel('accuracy')
-        plt.legend(['train', 'test'], loc="upper left")
-        title = "./fig_UCF101_ResNetCRNN.png"
-        plt.savefig(title, dpi=600)
-        # plt.close(fig)
-        plt.show()
+# plot
+fig = plt.figure(figsize=(10, 4))
+plt.subplot(121)
+plt.plot(np.arange(1, epochs + 1), A[:, -1])  # train loss (on epoch end)
+plt.plot(np.arange(1, epochs + 1), C)  # test loss (on epoch end)
+plt.title("model loss")
+plt.xlabel('epochs')
+plt.ylabel('loss')
+plt.legend(['train', 'test'], loc="upper left")
+# 2nd figure (accuracy)
+plt.subplot(122)
+plt.plot(np.arange(1, epochs + 1), B[:, -1])  # train accuracy (on epoch end)
+plt.plot(np.arange(1, epochs + 1), D)  # test accuracy (on epoch end)
+plt.title("training scores")
+plt.xlabel('epochs')
+plt.ylabel('accuracy')
+plt.legend(['train', 'test'], loc="upper left")
+title = "./fig_UCF101_ResNetCRNN.png"
+plt.savefig(title, dpi=600)
+# plt.close(fig)
+plt.show()
 
