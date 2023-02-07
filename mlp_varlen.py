@@ -19,35 +19,17 @@ import pickle
 import time
 
 
-# set visible CUDA device
-# os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-# os.environ["CUDA_VISIBLE_DEVICES"] = "0, 1"
-
 # set path
 data_path = "../../CHI_data/raw_frame_P"   # define UCF-101 spatial data path
 
-# +
-# action_name_path = '../targets_P33.pkl'
-# frame_slice_file = '../frame_count_P33.pkl'
 save_model_path = "./ResNetCRNN_ckpt_attention_map/"
 csv_path = "../CHI_PhoneLog_gap.csv"
-# h5_train_path = './CHI_30images_users_trainSet_fold1.h5'
-# h5_val_path = './CHI_30images_users_valSet_fold1.h5'
 fold = '1'
 dataset = 'all'
 h5_train_path = '../../../../work/u7002555/CHI_images_users_by_day_55_'+dataset+'_weekend_random_trainSet_fold'+fold+'.h5'
 h5_val_path = '../../../../work/u7002555/CHI_images_users_by_day_55_'+dataset+'_weekend_random_valSet_fold'+fold+'.h5'
-# h5_train_path = '../../../../work/u7002555/CHI_images_users_by_day_cluster2_2_trainSet_fold'+fold+'.h5'
-# h5_val_path = '../../../../work/u7002555/CHI_images_users_by_day_cluster2_2_valSet_fold'+fold+'.h5'
-# h5_train_path = './CHI_gen_users5_'+fold+'_3_trainSet.h5'
-# h5_val_path = './CHI_gen_users5_'+fold+'_3_testSet.h5'
-# h5_train_path = "./CHI_images_users_by_day_no_label2_2_trainSet_fold"+fold+".h5"
-# h5_val_path = "../../../../work/u7002555/CHI_images_users_by_day_no_label2_2_valSet_fold"+fold+".h5"
 
 user = ['P10','P11','P16','P17','P18','P19','P23','P24','P25','P26','P28','P29','P30','P31','P32','P33','P35','P36','P37','P38','P40','P41','P42','P43','P44','P45','P46','P47','P48','P49','P50','P51','P52','P53','P54','P55']
-
-
-# -
 
 
 CNN_fc_hidden1, CNN_fc_hidden2 = 1024, 768
@@ -122,7 +104,6 @@ def train(log_interval, model, device, train_loader, optimizer, epoch):
     # compute accuracy
     all_y = torch.stack(all_y, dim=0)
     all_y_pred = torch.stack(all_y_pred, dim=0)
-#     epoch_score = accuracy_score(all_y.cpu().data.squeeze().numpy(), all_y_pred.cpu().data.squeeze().numpy())
 
     return losses, scores
 
@@ -162,7 +143,6 @@ def validation(model, device, optimizer, test_loader):
 
     # save Pytorch models of best record
     check_mkdir(save_model_path)
-    #torch.save(cnn_encoder.state_dict(), os.path.join(save_model_path, 'cnn_encoder_epoch{}.pth'.format(epoch + 1)))  # save spatial_encoder
     torch.save(rnn_decoder.state_dict(), os.path.join(save_model_path, 'rnn_decoder_mlp'+fold+'_day2_55_'+dataset+'_weekend_random_epoch{}.pth'.format(epoch + 1)))  # save motion_encoder
     torch.save(optimizer.state_dict(), os.path.join(save_model_path, 'optimizer_mlp'+fold+'_day2_55_'+dataset+'_weekend_random_epoch{}.pth'.format(epoch + 1)))      # save optimizer
     print("Epoch {} model saved!".format(epoch + 1))
@@ -178,16 +158,6 @@ device = torch.device("cuda" if use_cuda else "cpu")   # use CPU or GPU
 params = {'batch_size': batch_size, 'shuffle': True, 'num_workers': num_workers, 'pin_memory': True,  'drop_last': True} if use_cuda else {}
 
 
-# +
-# load UCF101 actions names
-# with open(action_name_path, 'rb') as f:
-#     action_names = pickle.load(f)
-
-# +
-# load UCF101 video length
-# with open(frame_slice_file, 'rb') as f:
-#     slice_count = pickle.load(f)
-# -
 
 df = pd.read_csv(csv_path, index_col="file_name", low_memory=False)
 df = df[df['kill_time'].notna()]
@@ -196,20 +166,8 @@ df = df[df['PID'].isin(user)]
 df = df.drop(columns=['Unnamed: 0', 'PID' ,'screen_status', 'record_time', 'is_screenshotted','kill_time', 'cdma_signal_strength', 'lte_signal_strength_dbm']) #8
 
 
-# +
-# df = df['battery_percentage'].astype(np.int64)
-# df = df['orientation'].astype(np.int64)
-# pd.set_option('display.max_columns', None)
-
-# +
-# assert False
 train_set = Dataset_MLP_h5(h5_train_path, None)
 valid_set = Dataset_MLP_h5(h5_val_path, None)
-
-# valid_loader = data.DataLoader(valid_set, **params)
-# train_set, valid_set = Dataset_Log_varlen(data_path, train_list, train_label, select_frame, df), \
-#                        Dataset_Log_varlen(data_path, test_list, test_label, select_frame, df)
-# -
 
 train_loader = data.DataLoader(train_set, **params)
 valid_loader = data.DataLoader(valid_set, **params)
@@ -217,22 +175,6 @@ valid_loader = data.DataLoader(valid_set, **params)
 # Create model
 rnn_decoder = MLPEncoder(mlp_dim, RNN_hidden_layers, RNN_hidden_nodes,
                          RNN_FC_dim, dropout_p, k, df, device).to(device)
-# rnn_decoder = MLPEncoder(mlp_dim, RNN_hidden_layers, RNN_hidden_nodes,
-#                          RNN_FC_dim, dropout_p, k, df, device).to(device)
-
-
-# Combine all EncoderCNN + DecoderRNN parameters
-# print("Using", torch.cuda.device_count(), "GPU!")
-# if torch.cuda.device_count() > 1:
-#     # Parallelize model to multiple GPUs
-#     #cnn_encoder = nn.DataParallel(cnn_encoder)
-#     rnn_decoder = nn.DataParallel(rnn_decoder)
-#     crnn_params = list(rnn_decoder.parameters())
-
-# elif torch.cuda.device_count() == 1:
-#     crnn_params = list(rnn_decoder.parameters())
-
-# +
 if torch.cuda.device_count() > 1:
     print("Using", torch.cuda.device_count(), "GPUs!")
     #cnn_encoder = nn.DataParallel(cnn_encoder)
@@ -243,7 +185,7 @@ elif torch.cuda.device_count() == 1:
     # Combine all EncoderCNN + DecoderRNN parameters
     crnn_params = list(rnn_decoder.parameters())
     
-# optimizer = torch.optim.Adam(crnn_params, lr=learning_rate)
+
 optimizer = torch.optim.Adam(rnn_decoder.parameters(), lr=learning_rate)
 scheduler = ReduceLROnPlateau(optimizer, 'min', patience=lr_patience, min_lr=1e-10, verbose=True)
 # -
