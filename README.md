@@ -24,12 +24,16 @@ Our framework can be compiled on Python 3 environments. The modules used in our 
 
 ```python
 $ pip install -r requirements.txt
-
 ```
 
-- First, store your own screenshots in the datasets/screenshots folder and the corresponding sensor data in a csv file in datasets/sensor. See [In Details](#in-details) for more information on the folders.
+- First, store your own screenshots in the datasets/screenshots folder and the corresponding sensor data in a csv file in datasets/sensor. See [In Details](#in-details) for more information on the folders. We have provided few example data for you to run through our code.
 
-- Second, run `create_frame.py` to generate folders storing the 30-second window of screenshots as one training data point.
+- Second, run `create_frame.py` to generate folders storing the 30-second window of screenshots as one data point.
+
+
+```python
+$ python create_frame.py
+```
 
 - Third, run `create_dataset.py` to generate train, val, and test datasets.
 
