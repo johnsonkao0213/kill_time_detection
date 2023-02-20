@@ -188,13 +188,10 @@ $ python predictionFusion.py
 # Contributing
 
 
-<!-- Copy-paste in your Readme.md file -->
-
-<a href = "https://github.com/Tanu-N-Prabhu/Python/graphs/contributors">
-  <img src = "https://contrib.rocks/image?repo = GitHub_username/repository_name"/>
+<a href="https://github.com/johnsonkao0213/kill_time_detection/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=johnsonkao0213/kill_time_detection" />
 </a>
 
-Made with [contributors-img](https://contrib.rocks).
 
 # Acknowledgments
 
